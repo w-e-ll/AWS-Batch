@@ -41,7 +41,7 @@ The following diagram shows a general overview of how the AWS Batch resources in
         * brew install warrensbox/tap/tfswitch
     * ALKS Terraform Plugin
         * Below are installation steps on Mac
-            * curl -O https://github.com/Cox-Automotive/terraform-provider-alks/releases/download/1.3.1/terraform-provider-alks-darwin-amd64.tar.gz
+            * curl -O https://github.com/terraform-provider-alks/releases/download/1.3.1/terraform-provider-alks-darwin-amd64.tar.gz
             * tar xvzf terraform-provider-alks-darwin-amd64.tar.gz
             * mkdir ~/.terraform.d/plugins
             * mv terraform-provider-alks_v1.3.1 ~/.terraform.d/plugins/
@@ -251,5 +251,6 @@ Right now the project is configured with testing data, test containers. Job will
 - describe README.MD
 
 ## Authors
-Module managed by [Valentyn Sheboldaiev](Valentyn Sheboldaiev)
+Module managed by:
+https://w-e-ll.com
 
