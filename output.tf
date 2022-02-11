@@ -1,11 +1,14 @@
-output "vpi_id" {
-  value = var.get_vpc ? data.aws_vpc.current_vpc[0].id : null
+output "job_definition_name" {
+  description = "The ChromeVehicle Job definition name."
+  value = aws_batch_job_definition.ChromeVehicle.name
 }
 
-output "public_subnets" {
-  value = var.get_vpc ? data.aws_subnet_ids.public_subnets[0].ids : null
+output "job_definition_arn" {
+  description = "The ChromeVehicle Job definition ARN."
+  value       = aws_batch_job_definition.ChromeVehicle.arn
 }
 
-output "private_subnets" {
-  value = var.get_vpc ? data.aws_subnet_ids.private_subnets[0].ids : null
+output "job_definition_container_properties" {
+  description = "The ChromeVehicle Job definition container properties."
+  value       = aws_batch_job_definition.ChromeVehicle.container_properties
 }

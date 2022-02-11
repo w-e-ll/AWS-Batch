@@ -1,35 +1,78 @@
-variable "get_vpc" {
-  description = "Flag to get vpc, subnet ids"
-  type        = bool
-  default     = true
+data "aws_secretsmanager_secret" "creds" {
+  name = "ECS-Artifactory-Credentials"
 }
 
-data "aws_iam_account_alias" "current" {}
+resource "alks_iamrole" "ecs_execution_role" {
+  name                     = "AWS-PDBatch-lab-us-east-1-ecs-exec-role"
+  type                     = "Amazon EC2 Container Service Task Role"
+  include_default_policies = true
+}
 
-data "aws_vpc" "current_vpc" {
-  count = var.get_vpc ? 1 : 0
-  filter {
-      name   = "tag:Name"
-      values = [data.aws_iam_account_alias.current.account_alias]
+data "aws_iam_policy_document" "ecs_execution_role_policy_document" {
+  statement {
+    sid    = "EcrAuth"
+    effect = "Allow"
+    actions = [
+      "secretsmanager:GetSecretValue"
+    ]
+    resources = [
+      "*"
+    ]
   }
 }
 
-data "aws_subnet_ids" "public_subnets" {
-  count = var.get_vpc ? 1 : 0
-  vpc_id = data.aws_vpc.current_vpc[0].id
-
-  filter {
-      name = "tag:SUB-Type"
-      values = ["Public"]
-  }
+resource "aws_iam_role_policy" "ecs_execution_role_policy" {
+  name   = "AWS-PDBatch-lab-us-east-1-ecs-exec-role-policy"
+  policy = data.aws_iam_policy_document.ecs_execution_role_policy_document.json
+  role   = alks_iamrole.ecs_execution_role.id
 }
 
-data "aws_subnet_ids" "private_subnets" {
-  count = var.get_vpc ? 1 : 0
-  vpc_id = data.aws_vpc.current_vpc[0].id
-
-  filter {
-      name = "tag:SUB-Type"
-      values = ["Private"]
-  }
+resource "aws_batch_job_definition" "ChromeVehicle" {
+  name                 = var.job_definition_name
+  type                 = "container"
+  container_properties = <<CONTAINER_PROPERTIES
+{
+    "command": ["ls", "-la"],
+    "image": "dtfni-docker.artifactory.coxautoinc.com/drs/paymentdriver/development/batchprocessor:0.0.1-abc",
+    "memory": 1024,
+    "vcpus": 1,
+    "volumes": [
+      {
+        "host": {
+          "sourcePath": "/tmp"
+        },
+        "name": "tmp"
+      }
+    ],
+    "environment": [
+        {"name": "env", "value": "lab"}
+    ],
+    "mountPoints": [
+        {
+          "sourceVolume": "tmp",
+          "containerPath": "/tmp",
+          "readOnly": false
+        }
+    ],
+    "ulimits": [
+      {
+        "hardLimit": 1024,
+        "name": "nofile",
+        "softLimit": 1024
+      }
+    ],
+    "portMappings"  : [
+      {
+        "containerPort" : 80,
+        "hostPort"      : 0,
+        "protocol"      : "tcp"
+      }
+    ],
+    "timeout": [
+      {
+        "attemptDurationSeconds": 480
+      }
+    ]
+}
+CONTAINER_PROPERTIES
 }
